@@ -1,11 +1,9 @@
 local Entity, Component, System, World = {}, {}, {}, {}
 
--- enable/disable systems?
--- add asserts
+-- add sanity checks!
 -- multiple filters per system
--- get world an entity is in
--- check if world has system
 -- store system state in world
+-- enable/disable systems?
 
 -- ENTITY
 Entity.__index = Entity
@@ -17,13 +15,13 @@ function Entity.__getId()
 end
 
 function Entity.new(world)
-  local e = {}
+  local e = { __id = Entity.__getId() }
   setmetatable(e, Entity)
-  e.__id = Entity.__getId()
   if world then world:addEntity(e) end
   return e
 end
 
+-- TODO: test this thoroughly
 function Entity:clone()
   function deepCopy(table)
     local copy = {}
@@ -87,6 +85,10 @@ function Entity:destroy()
   self.__world:removeEntity(self)
 end
 
+function Entity:getWorld()
+  return self.__world
+end
+
 -- COMPONENT
 function Component.new(name, initFunc)
   Component[name] = initFunc
@@ -107,9 +109,8 @@ end
 System.__index = System
 
 function System.new(name, filter, events)
-  local s = {}
+  local s = { filter = filter }
   setmetatable(s, System)
-  s.filter = filter
   System[name] = s
   if events ~= nil then
     for event, func in pairs(events) do
@@ -128,20 +129,24 @@ end
 World.__index = World
 
 function World.new()
-  local w = {}
+  local w = { entities = {}, systems = {}, entityCount = 0 }
   setmetatable(w, World)
-  w.entities = {}
-  w.systems = {}
-  w.entityCount = 0
   return w
 end
 
 -- add filter parameter?
-function World:clear()
-  for k, system in pairs(self.systems) do
-    system.cache = {}
+function World:clear(filter)
+  if filter then
+    local matches = self:getEntities(filter)
+    for id,entity in pairs(matches) do
+      self:removeEntity(entity)
+    end
+  else
+    for k, system in pairs(self.systems) do
+      system.cache = {}
+    end
+    self.entities = {}
   end
-  self.entities = {}
   return self
 end
 
@@ -198,6 +203,10 @@ function World:getEntities(filter)
     end
   end
   return matches
+end
+
+function World:hasSystem(name)
+  return self.systems[name] ~= nill
 end
 
 function World:call(event, ...)

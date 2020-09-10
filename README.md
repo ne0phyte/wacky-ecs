@@ -120,6 +120,11 @@ entity:has('position')
 entity:has({'position', 'velocity'})
 ```
 
+```lua
+-- Get world the entity is in
+local entityWorld = entity:getWorld()
+```
+
 ## Systems
 
 A system represents the actual logic you want to run on entities that have a specific combination of components.
@@ -208,6 +213,14 @@ world:removeEntity(entity)
 ```
 
 ```lua
+-- Remove all entities from world
+world:clear()
+-- or selectively
+world:clear('position')
+world:clear({'position', 'velocity'})
+```
+
+```lua
 -- Call all systems that have an 'update' function
 world:call('update', dt)
 ```
@@ -219,6 +232,11 @@ Note that this a very expensive operation as it searches through all entities.
 local entities = world:getEntities('position')
 -- or
 local entities = world:getEntities({'position', 'velocity'})
+```
+
+```lua
+-- Check if world contains system
+local hasPhysics = world:hasSystem('physics')
 ```
 
 ## Complete example
