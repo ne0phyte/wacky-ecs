@@ -2,8 +2,23 @@ local Entity, Component, System, World = {}, {}, {}, {}
 
 -- add sanity checks!
 -- multiple filters per system
--- store system state in world
 -- enable/disable systems?
+
+-- STUFF
+function deepCopy(table)
+  local copy = {}
+  for k,v in pairs(table) do
+    if type(v) == 'table' then
+      if getmetatable(v) == Entity then
+        v = v:clone()
+      else
+        v = deepCopy(v)
+      end
+    end
+    copy[k] = v
+  end
+  return copy
+end
 
 -- ENTITY
 Entity.__index = Entity
@@ -23,20 +38,6 @@ end
 
 -- TODO: test this thoroughly
 function Entity:clone()
-  function deepCopy(table)
-    local copy = {}
-    for k,v in pairs(table) do
-      if type(v) == 'table' then
-        if getmetatable(v) == Entity then
-          v = v:clone()
-        else
-          v = deepCopy(v)
-        end
-      end
-      copy[k] = v
-    end
-    return copy
-  end
   local e = deepCopy(self)
   setmetatable(e, Entity)
   e.__id = Entity.__getId()
@@ -52,7 +53,6 @@ function Entity:add(component, ...)
   return self
 end
 
--- do this staged somehow I dunno wtf
 function Entity:remove(component)
   self[component] = nil
   if self.__world ~= nil then
@@ -122,7 +122,9 @@ end
 
 -- create copy + add world:getSystem to get local instance
 function System.get(name)
-  return System[name]
+  local s = deepCopy(System[name])
+--   return System[name]
+  return s
 end
 
 -- WORLD
@@ -134,7 +136,6 @@ function World.new()
   return w
 end
 
--- add filter parameter?
 function World:clear(filter)
   if filter then
     local matches = self:getEntities(filter)
@@ -207,6 +208,10 @@ end
 
 function World:hasSystem(name)
   return self.systems[name] ~= nill
+end
+
+function World:getSystem(name)
+  return self.systems[name].system
 end
 
 function World:call(event, ...)

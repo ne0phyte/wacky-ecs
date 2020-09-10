@@ -237,6 +237,9 @@ local entities = world:getEntities({'position', 'velocity'})
 ```lua
 -- Check if world contains system
 local hasPhysics = world:hasSystem('physics')
+
+-- Get system from world
+local physicsSystem = world:getSystem('physics')
 ```
 
 ## Complete example
