@@ -323,8 +323,10 @@ end
 ```
 
 <details>
-<summary>Gif of example running</summary>
+    <summary>Gif of example running</summary>
+
 ![Example](https://i.imgur.com/FEAvhP6.gif)
+
 </details>
 
 ## License
