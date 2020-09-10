@@ -322,8 +322,10 @@ function love.draw()
   love.graphics.print("GC: " .. math.floor(collectgarbage("count")/1024) .. "mb", 1, 32)
 end
 ```
-
+<details>
+<summary>Gif of example running</summary>
 ![Example](https://i.imgur.com/FEAvhP6.gif)
+</details>
 
 ## License
 
