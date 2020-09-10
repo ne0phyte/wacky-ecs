@@ -20,17 +20,16 @@ function deepCopy(table)
   return copy
 end
 
--- ENTITY
-Entity.__index = Entity
 local idCounter = 0
-
-function Entity.__getId()
+function getId()
   idCounter = idCounter + 1
   return idCounter
 end
 
+-- ENTITY
+Entity.__index = Entity
 function Entity.new(world)
-  local e = { __id = Entity.__getId() }
+  local e = { __id = getId() }
   setmetatable(e, Entity)
   if world then world:addEntity(e) end
   return e
@@ -40,7 +39,7 @@ end
 function Entity:clone()
   local e = deepCopy(self)
   setmetatable(e, Entity)
-  e.__id = Entity.__getId()
+  e.__id = __getId()
   e.__world = nil
   return e
 end
@@ -107,7 +106,6 @@ end
 
 -- SYSTEM
 System.__index = System
-
 function System.new(name, filter, events)
   local s = { filter = filter }
   setmetatable(s, System)
