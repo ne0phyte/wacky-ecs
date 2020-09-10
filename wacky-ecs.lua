@@ -120,10 +120,8 @@ function System.new(name, filter, events)
   return s
 end
 
--- create copy + add world:getSystem to get local instance
 function System.get(name)
   local s = deepCopy(System[name])
---   return System[name]
   return s
 end
 
