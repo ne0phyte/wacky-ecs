@@ -52,8 +52,8 @@ ECS.Component.new('position', function(component, x, y)
   return {x, y}
 end)
 
-ECS.Component.new('visible', function(component, visible)
-  return visible
+ECS.Component.new('visible', function(component, isVisible)
+  return isVisible
 end)
 ```
 
@@ -69,7 +69,7 @@ Entities are representing your game objects. You can add and remove components e
 
 An entity can only have one instance of a component. Adding the same component again overwrites the existing component
 
-Create entity and give it components. The parameters are passed to the function you defined when you created the components (see above).
+When adding components, the parameters are passed to the function you defined when you created the components (see above).
 
 ```lua
 -- Create entity
@@ -100,7 +100,6 @@ entity:remove('size')
 
 ```lua
 -- Get a table of all Components
--- Try not to call this regularly.
 -- Changing values in the returned tables changes the values in the entity
 local components = myEntity:getComponents()
 
@@ -115,9 +114,9 @@ entity:destroy()
 ```
 
 ```lua
--- Check if entity has component
+-- Check if an entity has a component
 entity:has('position')
--- or for multiple components
+-- or multiple components
 entity:has({'position', 'velocity'})
 ```
 
@@ -322,6 +321,7 @@ function love.draw()
   love.graphics.print("GC: " .. math.floor(collectgarbage("count")/1024) .. "mb", 1, 32)
 end
 ```
+
 <details>
 <summary>Gif of example running</summary>
 ![Example](https://i.imgur.com/FEAvhP6.gif)
