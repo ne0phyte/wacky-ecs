@@ -103,13 +103,12 @@ function System.new(name, filter, events)
   return s
 end
 
-function System.get(name)
+function System.createInstance(name)
   return deepCopy(System[name])
 end
 
 -- WORLD
 World.__index = World
-
 function World.new()
   local w = { entities = {}, systems = {}, entityCount = 0 }
   setmetatable(w, World)
@@ -132,7 +131,7 @@ function World:clear(filter)
 end
 
 function World:addSystem(name)
-  local system = System.get(name)
+  local system = System.createInstance(name)
   self.systems[name] = {
     system = system,
     cache = self:getEntities(system.filter)
