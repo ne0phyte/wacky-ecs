@@ -8,13 +8,7 @@ local Entity, Component, System, World = {}, {}, {}, {}
 function deepCopy(table)
   local copy = {}
   for k,v in pairs(table) do
-    if type(v) == 'table' then
-      if getmetatable(v) == Entity then
-        v = v:clone()
-      else
-        v = deepCopy(v)
-      end
-    end
+    if type(v) == 'table' then v = deepCopy(v) end
     copy[k] = v
   end
   return copy
@@ -32,15 +26,6 @@ function Entity.new(world)
   local e = { __id = getId() }
   setmetatable(e, Entity)
   if world then world:addEntity(e) end
-  return e
-end
-
--- TODO: test this thoroughly
-function Entity:clone()
-  local e = deepCopy(self)
-  setmetatable(e, Entity)
-  e.__id = __getId()
-  e.__world = nil
   return e
 end
 
@@ -119,8 +104,7 @@ function System.new(name, filter, events)
 end
 
 function System.get(name)
-  local s = deepCopy(System[name])
-  return s
+  return deepCopy(System[name])
 end
 
 -- WORLD

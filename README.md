@@ -83,16 +83,6 @@ local entity = ECS.Entity.new()
 local entity = ECS.Entity.new(world)
 ```
 
-You can clone an existing entity. This is a bit slower than assembling a new one but might be useful in certain cases.
-
-**Note that cloning an entity also creates clones of any entities that you may have stored in its components.**
-
-```lua
--- Clone existing entity
-local entity = ECS.Entity.new()
-local entityClone = existingEntity:clone()
-```
-
 ```lua
 --- Remove component
 entity:remove('size')
@@ -170,7 +160,7 @@ ECS.System.new('physics', {'position', 'velocity'}, {
 
 ### Verbose syntax
 
-`ECS.System.new()` returns the system so you can also add methods and variables the regular way:
+`ECS.System.new()` returns the system so you can also add methods and variables like this:
 
 ```lua
 local physicsSystem = ECS.System.new('physics', {'position', 'velocity'})
@@ -189,7 +179,6 @@ physicsSystem.gravity = 9.81
 ## Worlds
 
 For everything to work we create a world and then add systems and entities to it.
-To call the functions you defined in the systems you call e.g.`world:call('update')`. All systems that defined an `update()` function will be called with a list of the entities that match their respective filter.
 
 ```lua
 -- Create a world
@@ -220,15 +209,21 @@ world:clear('position')
 world:clear({'position', 'velocity'})
 ```
 
+
+
+To call the functions you defined in the systems you call e.g.`world:call('update')`. All systems that defined an `update()` function will be called with a list of the entities that match their respective filter. Any additional parameters are passed to the function. 
+
 ```lua
 -- Call all systems that have an 'update' function
 world:call('update', dt)
+-- pass additional parameters
+world:call('update', dt, 42, true)
 ```
-
-Note that this a very expensive operation as it searches through all entities.
 
 ```lua
 -- Get all entities that have specific components
+-- Note that this a very expensive operation as 
+-- it searches through all entities and creates a new table
 local entities = world:getEntities('position')
 -- or
 local entities = world:getEntities({'position', 'velocity'})
