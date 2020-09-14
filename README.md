@@ -65,7 +65,7 @@ ECS.Component.new('visible')
 
 ### Entities
 
-Entities are representing your game objects. You can add and remove components entities at any time. 
+Entities are representing your game objects and consist of components. You can add and remove components at any time. 
 
 An entity can only have one instance of a component. Adding the same component again overwrites the existing component
 
