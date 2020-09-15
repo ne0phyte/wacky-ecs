@@ -103,8 +103,12 @@ function System.new(name, filter, events)
   return s
 end
 
+function System:getWorld()
+  return self.world
+end
+
 function System.createInstance(name)
-  return deepCopy(System[name])
+  return setmetatable(deepCopy(System[name]), System)
 end
 
 -- WORLD
@@ -132,11 +136,16 @@ end
 
 function World:addSystem(name)
   local system = System.createInstance(name)
+  system.world = self
   self.systems[name] = {
     system = system,
     cache = self:getEntities(system.filter)
   }
   return self
+end
+
+function World:removeSystem(name)
+  self.systems[name] = nil
 end
 
 function World:addEntity(entity)

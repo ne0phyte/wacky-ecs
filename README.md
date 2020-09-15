@@ -10,11 +10,11 @@ wacky-ecs is a very simple ECS for LÖVE.
 
 ## Table of Contents
 
-[Installation](#installation)  
-[API](#api)  
+[Installation](#installation)
+[API](#api)
 
-- [Components](#components)  
-- [Entities](#entities)  
+- [Components](#components)
+- [Entities](#entities)
 - [Systems](#systems)
 - [Worlds](#worlds)
 
@@ -34,7 +34,7 @@ Clone the repository into your project directory and require it:
 
 ### Components
 
-Components are nothing but data (a lua table) attached to an entity. Each component has a name and any number of fields. 
+Components are nothing but data (a lua table) attached to an entity. Each component has a name and any number of fields.
 
 To populate a components fields in a convenient way you have to provide a function when creating a new component:
 
@@ -65,7 +65,7 @@ ECS.Component.new('visible')
 
 ### Entities
 
-Entities are representing your game objects. You can add and remove components entities at any time. 
+Entities are representing your game objects. You can add and remove components entities at any time.
 
 An entity can only have one instance of a component. Adding the same component again overwrites the existing component
 
@@ -119,7 +119,7 @@ local entityWorld = entity:getWorld()
 
 A system represents the actual logic you want to run on entities that have a specific combination of components.
 
-Each system can implement any number of methods (e.g. `update`, `draw`, ...). 
+Each system can implement any number of methods (e.g. `update`, `draw`, ...).
 
 To define which entities a system is interested in, you pass a filter which is a list of component names when creating the system.
 
@@ -128,7 +128,7 @@ To define which entities a system is interested in, you pass a filter which is a
 You can pass the functions you'll need as a table:
 
 ```lua
--- Create system 'physics' which processes entities 
+-- Create system 'physics' which processes entities
 -- that have a 'position' and a 'velocity' component
 ECS.System.new('physics', {'position', 'velocity'}, {
   update = function(self, entities, dt)
@@ -138,7 +138,7 @@ ECS.System.new('physics', {'position', 'velocity'}, {
     end
   end,
   somethingelse = function(self, entities, dt)
-     -- do your thing 
+     -- do your thing
   end
 })
 ```
@@ -157,6 +157,8 @@ ECS.System.new('physics', {'position', 'velocity'}, {
   gravity = 9.81
 })
 ```
+
+If you really have to you can get a reference to the world inside systems by calling `self:getWorld()`.
 
 ### Verbose syntax
 
@@ -211,7 +213,7 @@ world:clear({'position', 'velocity'})
 
 
 
-To call the functions you defined in the systems you call e.g.`world:call('update')`. All systems that defined an `update()` function will be called with a list of the entities that match their respective filter. Any additional parameters are passed to the function. 
+To call the functions you defined in the systems you call e.g.`world:call('update')`. All systems that defined an `update()` function will be called with a list of the entities that match their respective filter. Any additional parameters are passed to the function.
 
 ```lua
 -- Call all systems that have an 'update' function
@@ -222,7 +224,7 @@ world:call('update', dt, 42, true)
 
 ```lua
 -- Get all entities that have specific components
--- Note that this a very expensive operation as 
+-- Note that this a very expensive operation as
 -- it searches through all entities and creates a new table
 local entities = world:getEntities('position')
 -- or
