@@ -94,9 +94,8 @@ end
 System.__index = System
 function System.new(name, filter, events)
   local s = { filter = filter }
-  setmetatable(s, System)
-  System[name] = s
-  if events ~= nil then
+  System[name] = setmetatable(s, System)
+  if events then
     for event, func in pairs(events) do
       s[event] = func
     end
@@ -116,8 +115,7 @@ end
 World.__index = World
 function World.new()
   local w = { entities = {}, systems = {}, entityCount = 0 }
-  setmetatable(w, World)
-  return w
+  return setmetatable(w, World)
 end
 
 function World:clear(filter)
