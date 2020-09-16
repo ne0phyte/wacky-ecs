@@ -45,6 +45,7 @@ function Entity:remove(component)
 end
 
 function Entity:has(filter)
+  if filter == nil return false
   if type(filter) == 'string' then
     return self[filter] ~= nil
   else
