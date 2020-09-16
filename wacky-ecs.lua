@@ -202,9 +202,10 @@ function World:getSystem(name)
 end
 
 function World:call(event, ...)
-  for _, system in pairs(self.systems) do
-    if system.system[event] then
-      system.system[event](system.system, system.cache, ...)
+  for _, worldSystem in pairs(self.systems) do
+    local system = worldSystem.system
+    if type(system[event]) == 'function' then
+      system[event](system, worldSystem.cache, ...)
     end
   end
 end
