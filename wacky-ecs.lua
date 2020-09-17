@@ -187,12 +187,12 @@ function World:getEntities(filter)
   local matches = {}
   if not filter then
     for id,entity in pairs(self.entities) do
-      matches[id] = entity
+      table.insert(matches, entity)
     end
   else
     for id, entity in pairs(self.entities) do
       if entity:has(filter) then
-        matches[id] = entity
+        table.insert(matches, entity)
       end
     end
   end
