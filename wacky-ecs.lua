@@ -1,6 +1,5 @@
 local Entity, Component, System, World = {}, {}, {}, {}
 
--- add sanity checks!
 -- multiple filters per system
 -- enable/disable systems?
 
@@ -23,6 +22,7 @@ end
 -- ENTITY
 Entity.__index = Entity
 function Entity.new(world)
+  if getmetatable(world) ~= World then error("Entity.new() - Passed variable is not of type World") end
   local e = { __id = getId() }
   setmetatable(e, Entity)
   if world then world:addEntity(e) end
@@ -30,22 +30,22 @@ function Entity.new(world)
 end
 
 function Entity:add(component, ...)
-  self[component] = Component.get(component, ...)
-  if self.__world ~= nil then
-    self.__world:updateEntity(self)
+  self[component] = Component.__get(component, ...)
+  if self.__world then
+    self.__world:__updateEntity(self)
   end
   return self
 end
 
 function Entity:remove(component)
   self[component] = nil
-  if self.__world ~= nil then
-    self.__world:updateEntity(self)
+  if self.__world then
+    self.__world:__updateEntity(self)
   end
 end
 
 function Entity:has(filter)
-  if filter == nil return false end
+  if not filter then return false end
   if type(filter) == 'string' then
     return self[filter] ~= nil
   else
@@ -67,7 +67,7 @@ function Entity:getComponents()
 end
 
 function Entity:destroy()
-  self.__world:removeEntity(self)
+  if self.__world then self.__world:removeEntity(self) end
 end
 
 function Entity:getWorld()
@@ -79,7 +79,7 @@ function Component.new(name, initFunc)
   Component[name] = initFunc
 end
 
-function Component.get(name, ...)
+function Component.__get(name, ...)
   local component = {}
   if type(Component[name]) == 'function' then
     local c = Component[name](component, ...)
@@ -93,7 +93,7 @@ end
 -- SYSTEM
 System.__index = System
 function System.new(name, filter, events)
-  local s = { filter = filter }
+  local s = { __filter = filter }
   System[name] = setmetatable(s, System)
   if events then
     for event, func in pairs(events) do
@@ -104,10 +104,11 @@ function System.new(name, filter, events)
 end
 
 function System:getWorld()
-  return self.world
+  return self.__world
 end
 
-function System.createInstance(name)
+function System.__createInstance(name)
+  if not System[name] then return nil end
   return setmetatable(deepCopy(System[name]), System)
 end
 
@@ -134,11 +135,12 @@ function World:clear(filter)
 end
 
 function World:addSystem(name)
-  local system = System.createInstance(name)
-  system.world = self
+  local system = System.__createInstance(name)
+  if not system then error("World:addSystem() - System not found: " .. name) end
+  system.__world = self
   self.systems[name] = {
     system = system,
-    cache = self:getEntities(system.filter)
+    cache = self:getEntities(system.__filter)
   }
   return self
 end
@@ -148,11 +150,12 @@ function World:removeSystem(name)
 end
 
 function World:addEntity(entity)
+  if not entity then error("World:addEntity() - Entity is nil") end
   self.entityCount = self.entityCount + 1
   self.entities[entity.__id] = entity
   entity.__world = self
   for _,system in pairs(self.systems) do
-    if entity:has(system.system.filter) then
+    if entity:has(system.system.__filter) then
       system.cache[entity.__id] = entity
     end
   end
@@ -160,6 +163,7 @@ function World:addEntity(entity)
 end
 
 function World:removeEntity(entity)
+  if not entity then error("World:removeEntity() - Entity is nil") end
   self.entityCount = self.entityCount - 1
   self.entities[entity.__id] = nil
   entity.__world = nil
@@ -169,9 +173,9 @@ function World:removeEntity(entity)
   return self
 end
 
-function World:updateEntity(entity)
+function World:__updateEntity(entity)
   for _,system in pairs(self.systems) do
-    if entity:has(system.system.filter) then
+    if entity:has(system.system.__filter) then
       system.cache[entity.__id] = entity
     else
       system.cache[entity.__id] = nil
@@ -182,11 +186,13 @@ end
 function World:getEntities(filter)
   local matches = {}
   if not filter then
-    matches = self.entities
+    for id,entity in pairs(self.entities) do
+      matches[id] = entity
+    end
   else
-    for _, entity in pairs(self.entities) do
+    for id, entity in pairs(self.entities) do
       if entity:has(filter) then
-        matches[entity.__id] = entity
+        matches[id] = entity
       end
     end
   end
@@ -194,10 +200,11 @@ function World:getEntities(filter)
 end
 
 function World:hasSystem(name)
-  return self.systems[name] ~= nill
+  return self.systems[name] ~= nil
 end
 
 function World:getSystem(name)
+  if not self.systems[name] then error("World:getSystem() - System not found: " .. name) end
   return self.systems[name].system
 end
 
