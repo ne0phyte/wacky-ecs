@@ -22,7 +22,7 @@ end
 -- ENTITY
 Entity.__index = Entity
 function Entity.new(world)
-  if getmetatable(world) ~= World then error("Entity.new() - Passed variable is not of type World") end
+  if world and getmetatable(world) ~= World then error("Entity.new() - Passed variable is not of type World") end
   local e = { __id = getId() }
   setmetatable(e, Entity)
   if world then world:addEntity(e) end
