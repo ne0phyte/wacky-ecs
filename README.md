@@ -47,11 +47,11 @@ end)
 If your component doesn't need named table fields or consists of only one value you can also return a value directly:
 
 ```lua
-ECS.Component.new('position', function(component, x, y)
+ECS.Component.new('position', function(x, y)
   return {x, y}
 end)
 
-ECS.Component.new('visible', function(component, isVisible)
+ECS.Component.new('visible', function(isVisible)
   return isVisible
 end)
 ```
@@ -64,7 +64,7 @@ ECS.Component.new('visible')
 
 ### Entities
 
-Entities are representing your game objects and consist of components. You can add and remove components at any time. 
+Entities are representing your game objects and consist of components. You can add and remove components at any time.
 
 An entity can only have one instance of a component. Adding the same component again overwrites the existing component
 
