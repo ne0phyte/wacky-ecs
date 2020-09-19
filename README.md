@@ -148,7 +148,7 @@ You can also pass in variables you need in your system:
 ECS.System.new('physics', {'position', 'velocity'}, {
   update = function(self, entities, dt)
     for _, e in pairs(entities) do
-      e.velocity.vy = e.velocity.vy + self.gravity
+      e.velocity.vy = e.velocity.vy + self.gravity * dt
       e.position.x = e.position.x + e.velocity.vx * dt
       e.position.y = e.position.y + e.velocity.vy * dt
     end
@@ -168,10 +168,10 @@ local physicsSystem = ECS.System.new('physics', {'position', 'velocity'})
 
 function physicsSystem:update(entities, dt)
   for _, e in pairs(entities) do
+    e.velocity.vy = e.velocity.vy + self.gravity * dt
     e.position.x = e.position.x + e.velocity.vx * dt
     e.position.y = e.position.y + e.velocity.vy * dt
   end
-  print(self.gravity)
 end
 
 physicsSystem.gravity = 9.81
@@ -263,12 +263,12 @@ end)
 ECS.System.new('physics', {'position', 'velocity'}, {
   update = function(self, entities, dt)
     for _, e in ipairs(entities) do
-      e.velocity.vy = e.velocity.vy + self.gravity
+      e.velocity.vy = e.velocity.vy + self.gravity * dt
       e.position.x = e.position.x + e.velocity.vx * dt
       e.position.y = e.position.y + e.velocity.vy * dt
     end
   end,
-  gravity = 9.81
+  gravity = 9.81 * 60
 })
 
 -- Create system that removes offscreen entities
