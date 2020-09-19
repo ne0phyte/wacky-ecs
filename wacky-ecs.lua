@@ -76,18 +76,14 @@ end
 
 -- COMPONENT
 function Component.new(name, initFunc)
-  Component[name] = initFunc
+  Component[name] = initFunc or 'nil'
 end
 
 function Component.__get(name, ...)
-  local component = {}
   if type(Component[name]) == 'function' then
-    local c = Component[name](component, ...)
-    if c ~= nil then
-      component = c
-    end
+    return Component[name](...)
   end
-  return component
+  return {}
 end
 
 -- SYSTEM
@@ -155,7 +151,7 @@ function World:addEntity(entity)
   self.entities[entity.__id] = entity
   entity.__world = self
   for _,system in pairs(self.systems) do
-    if entity:has(system.system.__filter) then
+    if system.system.__filter and entity:has(system.system.__filter) then
       system.cache[entity.__id] = entity
     end
   end

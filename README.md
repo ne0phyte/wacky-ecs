@@ -40,12 +40,14 @@ To populate a components fields in a convenient way you have to provide a functi
 
 ```lua
 ECS.Component.new('position', function(component, x, y)
-  component.y = y
-  component.x = x
+  return {
+    x = x,
+    y = y  
+  }  
 end)
 ```
 
-If your component doesn't need named properties or consists of only one value you can also return a value directly:
+If your component doesn't need named properties or consists of only one value you can also return an integer indexed table or a single value directly:
 
 ```lua
 ECS.Component.new('position', function(component, x, y)
@@ -65,7 +67,7 @@ ECS.Component.new('visible')
 
 ### Entities
 
-Entities are representing your game objects and consist of components. You can add and remove components at any time. 
+Entities are representing your game objects and consist of components. You can add and remove components at any time.
 
 An entity can only have one instance of a component. Adding the same component again overwrites the existing component
 
@@ -211,8 +213,6 @@ world:clear('position')
 world:clear({'position', 'velocity'})
 ```
 
-
-
 To call the functions you defined in the systems you call e.g.`world:call('update')`. All systems that defined an `update()` function will be called with a list of the entities that match their respective filter. Any additional parameters are passed to the function.
 
 ```lua
@@ -246,23 +246,17 @@ local ECS = require('wacky-ecs.wacky-ecs')
 local width, height = love.graphics.getDimensions()
 
 -- Create components for position, velocity, size, color
-ECS.Component.new('position', function(component, x, y)
-  component.y = y
-  component.x = x
+ECS.Component.new('position', function(x, y)
+  return {x = x, y = y}
 end)
 ECS.Component.new('velocity', function(component, vx, vy)
-  component.vx = vx
-  component.vy = vy
+  return {vx = vx, vy = vy}
 end)
 ECS.Component.new('size', function(component, w, h)
-  component.w = w
-  component.h = h
+  return {w = w, h = h}
 end)
 ECS.Component.new('color', function(component, r, g, b, a)
-  component.r = r
-  component.g = g
-  component.b = b
-  component.a = a
+  return {r, g, b}
 end)
 
 -- Create physics system
@@ -297,7 +291,7 @@ ECS.System.new('remove_offscreen', {'position', 'size'}, {
 ECS.System.new('draw_rectangle', {'position', 'size', 'color'}, {
   draw = function(self, entities, dt)
     for _, e in pairs(entities) do
-      love.graphics.setColor(e.color.r, e.color.g, e.color.b, e.color.a)
+      love.graphics.setColor(e.color)
       love.graphics.rectangle('fill',e.position.x, e.position.y, e.size.w, e.size.h)
     end
   end
@@ -320,7 +314,7 @@ function love.update(dt)
       :add('position', x, y, math.random(0, math.pi * 2))
       :add('velocity', math.cos(dir) * 200, -400 + math.sin(dir) * 100)
       :add('size', math.random(1, 10), math.random(1, 10))
-      :add('color', math.random(), math.random(), math.random(), 1)
+      :add('color', math.random(), math.random(), math.random())
   end
   -- Calls the physics:update() and remove_offscreen:update() functions
   world:call('update', dt)
