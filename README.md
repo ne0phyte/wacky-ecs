@@ -39,13 +39,12 @@ Components are nothing but data (a lua table) attached to an entity. Each compon
 To populate a components fields in a convenient way you have to provide a function when creating a new component:
 
 ```lua
-ECS.Component.new('position', function(component, x, y)
-  component.y = y
-  component.x = x
+ECS.Component.new('position', function(x, y)
+  return { x = x, y = y }
 end)
 ```
 
-If your component doesn't need named properties or consists of only one value you can also return a value directly:
+If your component doesn't need named table fields or consists of only one value you can also return a value directly:
 
 ```lua
 ECS.Component.new('position', function(component, x, y)
@@ -158,7 +157,7 @@ ECS.System.new('physics', {'position', 'velocity'}, {
 })
 ```
 
-If you really have to you can get a reference to the world inside systems by calling `self:getWorld()`.
+You can get a reference to the world inside systems by calling `self:getWorld()`.
 
 ### Verbose syntax
 
@@ -201,6 +200,9 @@ world:addEntity(entity)
 
 -- Remove an entity from a world
 world:removeEntity(entity)
+
+-- Commit changed entities (add/remove/change) from last update
+world:commit()
 ```
 
 ```lua
@@ -210,8 +212,6 @@ world:clear()
 world:clear('position')
 world:clear({'position', 'velocity'})
 ```
-
-
 
 To call the functions you defined in the systems you call e.g.`world:call('update')`. All systems that defined an `update()` function will be called with a list of the entities that match their respective filter. Any additional parameters are passed to the function.
 
@@ -246,29 +246,23 @@ local ECS = require('wacky-ecs.wacky-ecs')
 local width, height = love.graphics.getDimensions()
 
 -- Create components for position, velocity, size, color
-ECS.Component.new('position', function(component, x, y)
-  component.y = y
-  component.x = x
+ECS.Component.new('position', function(x, y)
+  return {x = x, y = y}
 end)
-ECS.Component.new('velocity', function(component, vx, vy)
-  component.vx = vx
-  component.vy = vy
+ECS.Component.new('velocity', function(vx, vy)
+  return {vx = vx, vy = vy}
 end)
-ECS.Component.new('size', function(component, w, h)
-  component.w = w
-  component.h = h
+ECS.Component.new('size', function(w, h)
+  return {w = w, h = h}
 end)
-ECS.Component.new('color', function(component, r, g, b, a)
-  component.r = r
-  component.g = g
-  component.b = b
-  component.a = a
+ECS.Component.new('color', function(r, g, b, a)
+  return {r, g, b}
 end)
 
 -- Create physics system
 ECS.System.new('physics', {'position', 'velocity'}, {
   update = function(self, entities, dt)
-    for _, e in pairs(entities) do
+    for _, e in ipairs(entities) do
       e.velocity.vy = e.velocity.vy + self.gravity
       e.position.x = e.position.x + e.velocity.vx * dt
       e.position.y = e.position.y + e.velocity.vy * dt
@@ -280,7 +274,7 @@ ECS.System.new('physics', {'position', 'velocity'}, {
 -- Create system that removes offscreen entities
 ECS.System.new('remove_offscreen', {'position', 'size'}, {
   update = function(self, entities, dt)
-    for _, e in pairs(entities) do
+    for _, e in ipairs(entities) do
       if e.position.x > self.screenWidth
         or e.position.x + e.size.w < 0
         or e.position.y > self.screenHeight
@@ -296,8 +290,8 @@ ECS.System.new('remove_offscreen', {'position', 'size'}, {
 -- Create system that draws rectangles
 ECS.System.new('draw_rectangle', {'position', 'size', 'color'}, {
   draw = function(self, entities, dt)
-    for _, e in pairs(entities) do
-      love.graphics.setColor(e.color.r, e.color.g, e.color.b, e.color.a)
+    for _, e in ipairs(entities) do
+      love.graphics.setColor(e.color)
       love.graphics.rectangle('fill',e.position.x, e.position.y, e.size.w, e.size.h)
     end
   end
@@ -309,34 +303,49 @@ local world = ECS.World.new()
     :addSystem('draw_rectangle')
     :addSystem('remove_offscreen')
 
--- Add 50 entities each frame
+local stats = {
+  update = 0,
+  draw = 0,
+  frames = 0
+}
+
+-- Add 100 entities each frame
 function love.update(dt)
+  stats.update = love.timer.getTime()
   local angle = love.timer.getTime()*10
   local x = width/2 + math.cos(angle) * 100
   local y = height/2 + math.sin(angle) * 100
-  for i=50,1,-1 do
+  for i=100,1,-1 do
     local dir = math.random(0, math.pi * 2 * 100) / 100
-    local e = ECS.Entity.new(world)
+    local e = ECS.Entity.new()
       :add('position', x, y, math.random(0, math.pi * 2))
       :add('velocity', math.cos(dir) * 200, -400 + math.sin(dir) * 100)
       :add('size', math.random(1, 10), math.random(1, 10))
-      :add('color', math.random(), math.random(), math.random(), 1)
+      :add('color', math.random(), math.random(), math.random())
+    world:addEntity(e)
   end
+  -- commit changes (added/removed/changed entities) from last update
+  world:commit()
   -- Calls the physics:update() and remove_offscreen:update() functions
   world:call('update', dt)
+  stats.update = love.timer.getTime() - stats.update
 end
 
 function love.draw()
+  stats.draw = love.timer.getTime()
   love.graphics.clear()
   -- Calls the draw_rectangle:draw() function
   world:call('draw')
 
+  stats.draw = love.timer.getTime() - stats.draw
   love.graphics.setColor(1,1,1,1)
-  love.graphics.rectangle('fill', 0, 0, 100, 48)
+  love.graphics.rectangle('fill', 0, 0, 100, 80)
   love.graphics.setColor(0,0,0,1)
-  love.graphics.print("Entities: " .. world.entityCount, 1, 0)
-  love.graphics.print("FPS: " .. love.timer.getFPS(), 1, 16)
-  love.graphics.print("GC: " .. math.floor(collectgarbage("count")/1024) .. "mb", 1, 32)
+  love.graphics.print("FPS: " .. love.timer.getFPS(), 1, 0)
+  love.graphics.print("GC: " .. math.floor(collectgarbage("count")/1024) .. "mb", 1, 16)
+  love.graphics.print("Update: " .. math.floor((stats.update)*1000*100)/100, 1, 32)
+  love.graphics.print("Draw: " .. math.floor((stats.draw)*1000*100)/100, 1, 48)
+  love.graphics.print("Entities: " .. world:getEntityCount(), 1, 64)
 end
 ```
 
