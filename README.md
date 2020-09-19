@@ -317,12 +317,11 @@ function love.update(dt)
   local y = height/2 + math.sin(angle) * 100
   for i=100,1,-1 do
     local dir = math.random(0, math.pi * 2 * 100) / 100
-    local e = ECS.Entity.new()
+    local e = ECS.Entity.new(world)
       :add('position', x, y, math.random(0, math.pi * 2))
       :add('velocity', math.cos(dir) * 200, -400 + math.sin(dir) * 100)
       :add('size', math.random(1, 10), math.random(1, 10))
       :add('color', math.random(), math.random(), math.random())
-    world:addEntity(e)
   end
   -- commit changes (added/removed/changed entities) from last update
   world:commit()

@@ -28,6 +28,7 @@ function List.new(objects)
 end
 
 function List:add(object)
+  if self[object] then return end
   local idx = self.size + 1
   self[idx] = object
   self[object] = idx
@@ -56,6 +57,10 @@ function List:addAll(objects)
     self:add(v)
   end
   return self
+end
+
+function List:has(object)
+  return self[object] ~= nil
 end
 
 -- ENTITY
