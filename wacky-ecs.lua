@@ -27,11 +27,13 @@ function List.new(objects)
   return l
 end
 
-function List:add(object)
+function List:add(object, nokey)
   if self[object] then return end
   local idx = self.size + 1
   self[idx] = object
-  self[object] = idx
+  if not nokey then
+    self[object] = idx
+  end
   self.size  = idx
   return self
 end
@@ -186,6 +188,7 @@ function World:commit()
     for _,system in pairs(self.systems) do
       if system.system.__filter and entity:has(system.system.__filter) then
         system.cache:add(entity)
+        self:__callOwners('wacky_entity_add', entity)
       end
     end
   end
@@ -196,6 +199,7 @@ function World:commit()
     entity.__world = nil
     for _,system in pairs(self.systems) do
       system.cache:remove(entity)
+      self:__callOwners('wacky_entity_remove', entity)
     end
   end
   self.__remove = List.new()
@@ -219,6 +223,9 @@ function World:addSystem(name)
     system = system,
     cache = List.new(self:getEntities(system.__filter))
   }
+  if type(system.wacky_init) == 'function' then
+    system:wacky_init()
+  end
   return self
 end
 
@@ -232,18 +239,18 @@ end
 
 function World:addEntity(entity)
   if not entity then error("World:addEntity() - Entity is nil") end
-  self.__add:add(entity)
+  self.__add:add(entity, true)
   return self
 end
 
 function World:removeEntity(entity)
   if not entity then error("World:removeEntity() - Entity is nil") end
-  self.__remove:add(entity)
+  self.__remove:add(entity, true)
   return self
 end
 
 function World:__updateEntity(entity)
-  self.__update:add(entity)
+  self.__update:add(entity, true)
 end
 
 function World:getEntities(filter)
@@ -279,6 +286,15 @@ function World:call(event, ...)
     local system = worldSystem.system
     if type(system[event]) == 'function' then
       system[event](system, worldSystem.cache, ...)
+    end
+  end
+end
+
+function World:__callOwners(event, entity)
+  for _, worldSystem in pairs(self.systems) do
+    local system = worldSystem.system
+    if type(system[event]) == 'function' and worldSystem.cache:has(entity) then
+      system[event](system, entity)
     end
   end
 end
