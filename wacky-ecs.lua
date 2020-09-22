@@ -1,4 +1,8 @@
-local List, Entity, Component, System, World = {}, {}, {}, {}, {}
+local PATH = (...):match('(.-)[^%.]+$')
+local HashList = require(PATH .. '.util.hashlist')
+local ArrayList = require(PATH .. '.util.arraylist')
+
+local Entity, Component, System, World = {}, {}, {}, {}
 
 -- multiple filters per system
 -- enable/disable systems?
@@ -17,52 +21,6 @@ local idCounter = 0
 local function getId()
   idCounter = idCounter + 1
   return idCounter
-end
-
--- LIST
-List.__index = List
-function List.new(objects)
-  local l = setmetatable({ size = 0}, List)
-  if type(objects) == 'table' then l:addAll(objects) end
-  return l
-end
-
-function List:add(object, nokey)
-  if self[object] then return end
-  local idx = self.size + 1
-  self[idx] = object
-  if not nokey then
-    self[object] = idx
-  end
-  self.size  = idx
-  return self
-end
-
-function List:remove(object)
-  local idx = self[object]
-  if not idx then return end
-  local size = self.size
-
-  if idx ~= size then
-    local last = self[size]
-    self[idx], self[last] = last, idx
-  end
-
-  self[size] = nil
-  self[object] = nil
-  self.size = size - 1
-  return self
-end
-
-function List:addAll(objects)
-  for k,v in pairs(objects) do
-    self:add(v)
-  end
-  return self
-end
-
-function List:has(object)
-  return self[object] ~= nil
 end
 
 -- ENTITY
@@ -157,10 +115,10 @@ end
 World.__index = World
 function World.new()
   return setmetatable({
-    entities = List.new(),
-    __add = List.new(),
-    __remove = List.new(),
-    __update = List.new(),
+    entities = HashList.new(),
+    __add = HashList.new(),
+    __remove = HashList.new(),
+    __update = HashList.new(),
     systems = {},
     entityCount = 0
   }, World)
@@ -174,9 +132,9 @@ function World:clear(filter)
     end
   else
     for _, system in pairs(self.systems) do
-      system.cache = List.new()
+      system.cache:clear()
     end
-    self.entities = List.new()
+    self.entities:clear()
   end
   return self
 end
@@ -192,7 +150,7 @@ function World:commit()
       end
     end
   end
-  self.__add = List.new()
+  self.__add:clear()
 
   for _,entity in ipairs(self.__remove) do
     self.entities:remove(entity)
@@ -202,7 +160,7 @@ function World:commit()
       self:__callOwners('wacky_entity_remove', entity)
     end
   end
-  self.__remove = List.new()
+  self.__remove:clear()
 
   for _,entity in ipairs(self.__update) do
     for _,system in pairs(self.systems) do
@@ -213,6 +171,7 @@ function World:commit()
       end
     end
   end
+  self.__update:clear()
 end
 
 function World:addSystem(name)
@@ -221,10 +180,10 @@ function World:addSystem(name)
   system.__world = self
   self.systems[name] = {
     system = system,
-    cache = List.new(self:getEntities(system.__filter))
+    cache = HashList.new(self:getEntities(system.__filter))
   }
   if type(system.wacky_init) == 'function' then
-    system:wacky_init()
+    system:wacky_init(self)
   end
   return self
 end
@@ -282,12 +241,16 @@ function World:getSystem(name)
 end
 
 function World:call(event, ...)
+  prof.push(event)
   for _, worldSystem in pairs(self.systems) do
     local system = worldSystem.system
     if type(system[event]) == 'function' then
+      prof.push(_)
       system[event](system, worldSystem.cache, ...)
+      prof.pop(_)
     end
   end
+  prof.pop(event)
 end
 
 function World:__callOwners(event, entity)
@@ -303,5 +266,9 @@ return {
   Entity = Entity,
   Component = Component,
   System = System,
-  World = World
+  World = World,
+  Data = {
+    HashList = HashList,
+    ArrayList = ArrayList
+  }
 }
