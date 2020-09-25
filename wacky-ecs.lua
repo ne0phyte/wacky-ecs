@@ -124,7 +124,8 @@ function World.new()
     __add = HashList.new(),
     __remove = HashList.new(),
     __update = HashList.new(),
-    systems = {},
+    systems = ArrayList.new(),
+    systemNames = {},
     entityCount = 0
   }, World)
 end
@@ -136,7 +137,7 @@ function World:clear(filter)
       self:removeEntity(entity)
     end
   else
-    for _, system in pairs(self.systems) do
+    for _, system in ipairs(self.systems) do
       system.cache:clear()
     end
     self.entities:clear()
@@ -148,7 +149,7 @@ function World:commit()
   for _,entity in ipairs(self.__add) do
     self.entities:add(entity)
     entity.__world = self
-    for _,worldSystem in pairs(self.systems) do
+    for _,worldSystem in ipairs(self.systems) do
       local system = worldSystem.system
       if system.__filter and entity:has(system.__filter) then
         worldSystem.cache:add(entity)
@@ -163,7 +164,7 @@ function World:commit()
   for _,entity in ipairs(self.__remove) do
     self.entities:remove(entity)
     entity.__world = nil
-    for _,worldSystem in pairs(self.systems) do
+    for _,worldSystem in ipairs(self.systems) do
       local system = worldSystem.system
       worldSystem.cache:remove(entity)
       if type(system.wacky_entity_remove) == 'function' then
@@ -174,7 +175,7 @@ function World:commit()
   self.__remove:clear()
 
   for _,entity in ipairs(self.__update) do
-    for _,worldSystem in pairs(self.systems) do
+    for _,worldSystem in ipairs(self.systems) do
       local system = worldSystem.system
       if entity:has(system.__filter) then
         worldSystem.cache:add(entity)
@@ -196,10 +197,13 @@ function World:addSystem(name)
   local system = System.__createInstance(name)
   if not system then error("World:addSystem() - System not found: " .. name) end
   system.__world = self
-  self.systems[name] = {
+
+  local idx = self.systems:add({
     system = system,
     cache = HashList.new(self:getEntities(system.__filter))
-  }
+  })
+  self.systemNames[name] = idx
+  print('add system', name, idx)
   if type(system.wacky_init) == 'function' then
     system:wacky_init(self)
   end
@@ -207,7 +211,10 @@ function World:addSystem(name)
 end
 
 function World:removeSystem(name)
-  self.systems[name] = nil
+  local idx = self.systemNames[name]
+  self.systems:remove(idx)
+  self.systems:compact(true)
+  self.systemNames[name] = nil
 end
 
 function World:getEntityCount()
@@ -234,7 +241,7 @@ function World:getEntities(filter)
   local matches = {}
   local i = 1
   if not filter then
-    for id,entity in pairs(self.entities) do
+    for id,entity in ipairs(self.entities) do
       matches[i] = entity
       i = i + 1
     end
@@ -250,17 +257,18 @@ function World:getEntities(filter)
 end
 
 function World:hasSystem(name)
-  return self.systems[name] ~= nil
+  return self.systemNames[name] ~= nil
 end
 
 function World:getSystem(name)
-  if not self.systems[name] then error("World:getSystem() - System not found: " .. name) end
-  return self.systems[name].system
+  local idx = self.systemNames[name]
+  if not idx then error("World:getSystem() - System not found: " .. name) end
+  return self.systems:get(idx).system
 end
 
 function World:call(event, ...)
   prof.push(event)
-  for _, worldSystem in pairs(self.systems) do
+  for _, worldSystem in ipairs(self.systems) do
     local system = worldSystem.system
     if type(system[event]) == 'function' then
       prof.push(_)
@@ -270,15 +278,6 @@ function World:call(event, ...)
   end
   prof.pop(event)
 end
-
--- function World:__callOwners(event, entity)
---   for _, worldSystem in pairs(self.systems) do
---     local system = worldSystem.system
---     if type(system[event]) == 'function' and worldSystem.cache:has(entity) then
---       system[event](system, entity)
---     end
---   end
--- end
 
 return {
   Entity = Entity,
