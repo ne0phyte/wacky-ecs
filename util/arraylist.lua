@@ -67,6 +67,9 @@ function ArrayList:resize(size)
   else
     self:resize(self.__head)
   end
+  if self.__head > self.__size then
+    self.__head = self.__size
+  end
 end
 
 function ArrayList:getSize()
@@ -88,16 +91,25 @@ end
 function ArrayList:__compactPreserveOrder()
   local head, length = 1, self.__size
 
-  for h=1, length do
-    if self[h] == false then
-      for i=h+1,length do
-        self[i-1] = self[i]
+  -- from head to tail
+  while head <= length do
+    if self[head] == false then
+      local skip = 1
+      -- how many empty indices
+      while self[head+skip] == false and head+skip <= length do
+        skip = skip + 1
       end
-      self[length] = nil
-      length = length - 1
+      -- move rest of array
+      for i=head+skip,length do
+        self[i-skip] = self[i]
+      end
+      -- move head forward and tail backwards
+      length = length - skip
+    else
+      head = head + 1
     end
   end
-  self.__size = length
+  self:resize(length)
 end
 
 function ArrayList:__compactFast()
@@ -106,21 +118,17 @@ function ArrayList:__compactFast()
   -- from head to tail
   for h=1, length do
     if self[h] == false then
-      -- from tail to empty index
+      -- from tail to non-empty index
       for t=length,h, -1 do
-        if self[t] == false then
-          self[t] = nil
-          length = length - 1
-        else
+        length = length - 1
+        if self[t] ~= false then
           self[h] = self[t]
-          self[t] = nil
-          length = length - 1
           break
         end
       end
     end
   end
-  self.__size = length
+  self:resize(length)
 end
 
 return ArrayList
