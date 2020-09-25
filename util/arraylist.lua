@@ -18,7 +18,7 @@ function ArrayList:add(o)
   self[head] = o or false
   self.__head = head
   if head > self.__size then self.__size = head end
-  return size
+  return head
 end
 
 function ArrayList:addAll(t)
@@ -77,13 +77,37 @@ function ArrayList:getHead()
   return self.__head
 end
 
-function ArrayList:compact()
+function ArrayList:compact(preserveOrder)
+  if preserveOrder then
+    self:__compactPreserveOrder()
+  else
+    self:__compactFast()
+  end
+end
+
+function ArrayList:__compactPreserveOrder()
+  local head, length = 1, self.__size
+
+  for h=1, length do
+    if self[h] == false then
+      for i=h+1,length do
+        self[i-1] = self[i]
+      end
+      self[length] = nil
+      length = length - 1
+    end
+  end
+  self.__size = length
+end
+
+function ArrayList:__compactFast()
   local head, length = 1, self.__size
 
   -- from head to tail
   for h=1, length do
     if self[h] == false then
-      for t=tail,h, -1 do
+      -- from tail to empty index
+      for t=length,h, -1 do
         if self[t] == false then
           self[t] = nil
           length = length - 1
