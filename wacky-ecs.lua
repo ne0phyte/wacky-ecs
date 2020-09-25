@@ -1,6 +1,7 @@
 local PATH = (...):match('(.-)[^%.]+$')
 local HashList = require(PATH .. '.util.hashlist')
 local ArrayList = require(PATH .. '.util.arraylist')
+local Vector2D = require(PATH .. '.util.brinevector')
 
 local Entity, Component, System, World = {}, {}, {}, {}
 
@@ -102,6 +103,10 @@ function System.new(name, filter, events)
   return s
 end
 
+function System:getFilter()
+  return self.__filter
+end
+
 function System:getWorld()
   return self.__world
 end
@@ -143,10 +148,13 @@ function World:commit()
   for _,entity in ipairs(self.__add) do
     self.entities:add(entity)
     entity.__world = self
-    for _,system in pairs(self.systems) do
-      if system.system.__filter and entity:has(system.system.__filter) then
-        system.cache:add(entity)
-        self:__callOwners('wacky_entity_add', entity)
+    for _,worldSystem in pairs(self.systems) do
+      local system = worldSystem.system
+      if system.__filter and entity:has(system.__filter) then
+        worldSystem.cache:add(entity)
+        if type(system.wacky_entity_add) == 'function' then
+          system:wacky_entity_add(entity)
+        end
       end
     end
   end
@@ -155,19 +163,29 @@ function World:commit()
   for _,entity in ipairs(self.__remove) do
     self.entities:remove(entity)
     entity.__world = nil
-    for _,system in pairs(self.systems) do
-      system.cache:remove(entity)
-      self:__callOwners('wacky_entity_remove', entity)
+    for _,worldSystem in pairs(self.systems) do
+      local system = worldSystem.system
+      worldSystem.cache:remove(entity)
+      if type(system.wacky_entity_remove) == 'function' then
+        system:wacky_entity_remove(entity)
+      end
     end
   end
   self.__remove:clear()
 
   for _,entity in ipairs(self.__update) do
-    for _,system in pairs(self.systems) do
-      if entity:has(system.system.__filter) then
-        system.cache:add(entity)
+    for _,worldSystem in pairs(self.systems) do
+      local system = worldSystem.system
+      if entity:has(system.__filter) then
+        worldSystem.cache:add(entity)
+        if type(system.wacky_entity_add) == 'function' then
+          system:wacky_entity_add(entity)
+        end
       else
         system.cache:remove(entity)
+        if type(system.wacky_entity_remove) == 'function' then
+          system:wacky_entity_remove(entity)
+        end
       end
     end
   end
@@ -253,14 +271,14 @@ function World:call(event, ...)
   prof.pop(event)
 end
 
-function World:__callOwners(event, entity)
-  for _, worldSystem in pairs(self.systems) do
-    local system = worldSystem.system
-    if type(system[event]) == 'function' and worldSystem.cache:has(entity) then
-      system[event](system, entity)
-    end
-  end
-end
+-- function World:__callOwners(event, entity)
+--   for _, worldSystem in pairs(self.systems) do
+--     local system = worldSystem.system
+--     if type(system[event]) == 'function' and worldSystem.cache:has(entity) then
+--       system[event](system, entity)
+--     end
+--   end
+-- end
 
 return {
   Entity = Entity,
@@ -269,6 +287,7 @@ return {
   World = World,
   Data = {
     HashList = HashList,
-    ArrayList = ArrayList
+    ArrayList = ArrayList,
+    Vector2D = Vector2D
   }
 }

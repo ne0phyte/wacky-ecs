@@ -12,9 +12,9 @@ ECS.System.new('mouse_camera_pan', nil, {
     local x, y = input:getMouse()
     local w,h = camera:getScreen()
 
-    local wx, wy = input:getMouseWheel()
-    wy = math.min(wy, 9)
-    camera:setZoom((10-wy)/10, (10-wy)/10)
+--     local wx, wy = input:getMouseWheel()
+--     wy = math.min(wy, 9)
+--     camera:setZoom((10-wy)/10, (10-wy)/10)
     if mDown then
       if not self.dragging then
         local cx, cy = camera:getPosition()

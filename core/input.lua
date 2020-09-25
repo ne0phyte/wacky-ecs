@@ -25,3 +25,8 @@ end
 function input:getMouseWheel()
   return self.wheel.x, self.wheel.y
 end
+
+function input:getGameMouse()
+  local camera = self:getWorld():getSystem('camera')
+  return camera:screenToGame(self.mouse.x, self.mouse.y)
+end

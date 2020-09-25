@@ -1,22 +1,25 @@
 local ECS = require('wacky-ecs.wacky-ecs')
 
 local camera = ECS.System.new('camera', 'camera')
+local Vector2D = ECS.Data.Vector2D
 
-camera.size = { w = 1, h = 1 }
-camera.screen = { w = width, h = height }
-camera.scale = { x = 1, y = 1 }
-camera.pos = { x = 0, y = 0 }
-camera.preserveRatio = false
-camera.zoom = { x = 1, y = 1 }
+function camera:wacky_init(world)
+  self.size = Vector2D(1, 1)
+  self.screen = Vector2D(1, 1)
+  self.scale = Vector2D(1, 1)
+  self.pos = Vector2D(0, 0)
+  self.preserveRatio = false
+  self.zoom = Vector2D(1, 1)
+  self:update_camera()
+end
 
 function camera:update_camera(entities)
-    self.screen.w, self.screen.h = love.graphics.getDimensions()
-    self.scale.x = self.screen.w / self.size.w
-    self.scale.y = self.screen.h / self.size.h
+    self.screen.x, self.screen.y = love.graphics.getDimensions()
+    self.scale.x = self.screen.x / self.size.x
+    self.scale.y = self.screen.y / self.size.y
 end
 
 function camera:draw_camera(entities)
-
   love.graphics.scale(self.scale.x, self.scale.y)
   love.graphics.translate(self.pos.x, self.pos.y)
 
@@ -41,8 +44,8 @@ function camera:getVisible()
   return
     self.pos.x,
     self.pos.y,
-    self.size.w,
-    self.size.h
+    self.size.x,
+    self.size.y
 end
 
 function camera:setPosition(x, y)
@@ -54,21 +57,25 @@ function camera:getPosition()
 end
 
 function camera:getSize()
-  return self.size.w, self.size.h
+  return self.size.x, self.size.y
+end
+
+function camera:setSize(w, h)
+  self.size.x, self.size.y = w, h
 end
 
 function camera:getScreen()
-  return self.screen.w, self.screen.h
+  return self.screen.x, self.screen.y
 end
 
 function camera:isVisible(x, y, w, h)
-  x = x + self.pos.x
-  y = y + self.pos.y
-  return x+w > 0 and x < self.size.w and
-         y+h > 0 and y < self.size.h
+  local x = x + self.pos.x
+  local y = y + self.pos.y
+  return x+w > 0 and x < self.size.x and
+         y+h > 0 and y < self.size.y
 end
 
-function camera:setZoom(x, y)
-  self.zoom.x = x
-  self.zoom.y = y
-end
+-- function camera:setZoom(x, y)
+--   self.zoom.x = x
+--   self.zoom.y = y
+-- end

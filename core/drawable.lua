@@ -1,5 +1,7 @@
 local ECS = require('wacky-ecs.wacky-ecs')
 
+local Vector2D = ECS.Data.Vector2D
+
 ECS.Component.new('drawable',
 function(texture, z, quad, color, angle, floor)
   return {
@@ -8,7 +10,8 @@ function(texture, z, quad, color, angle, floor)
     color = color or {1,1,1},
     z = z or 0,
     angle = angle or 0,
-    floor = floor or true
+    floor = floor or true,
+    scale = Vector2D(1,1)
   }
 end)
 
@@ -40,15 +43,15 @@ function render:draw(entities)
   -- sort by z and __id
   prof.push('sort_drawables')
   local drawList = self.drawList
-  local tinsert = table.insert
   drawList:resetHead()
   for _,e in ipairs(entities) do
     local x,y = resolveEntityPosition(e)
-    if not self.enableCulling or camera:isVisible(x,y,e.size.w,e.size.h) then
+    if not self.enableCulling or camera:isVisible(x,y,e.size.x,e.size.y) then
       drawList:add(e)
     end
   end
-  drawList:resize()
+  drawList:resize() -- avoid?
+  -- how to sort only range of list with table.sort
   table.sort(drawList, function(e1, e2)
     if e1.drawable.z == e2.drawable.z then return e1.__id < e2.__id
     else return e1.drawable.z < e2.drawable.z end
@@ -57,15 +60,14 @@ function render:draw(entities)
   prof.pop('sort_drawables')
 
   prof.push('render')
---   for i=1,self.drawListLength do
---     local e = drawList[i]
   for _,e in ipairs(drawList) do
     local d = e.drawable
     local p = e.position
     local s = e.size
 
     local x,y = resolveEntityPosition(e)
-    local offx,offy = e.size.w/2, e.size.h/2
+    local offx,offy = e.size.x/2, e.size.y/2
+    local angle = e.angle or 0 + d.angle
 
     if d.floor then
       x = math.floor(0.5+x)
@@ -80,12 +82,14 @@ function render:draw(entities)
       x,y = x+offx, y+offy
       if d.quad then
         local qx, qy, qw, qh = d.quad:getViewport( )
-        local sx, sy = s.w / qw, s.h / qh
-        love.graphics.draw(d.texture, d.quad, x, y, p.angle + d.angle, sx, sy, offx, offy)
+        local sx, sy = s.x / qw, s.y / qh
+        sx, sy = sx * d.scale.x, sy * d.scale.y
+        love.graphics.draw(d.texture, d.quad, x, y, angle, sx, sy, offx, offy)
       else
         local tw, th = d.texture:getDimensions( )
-        local sx, sy = s.w / tw, s.h / th
-        love.graphics.draw(d.texture, x, y, p.angle + d.angle, sx, sy, offx, offy)
+        local sx, sy = s.x / tw, s.y / th
+        sx, sy = sx * d.scale.x, sy * d.scale.y
+        love.graphics.draw(d.texture, x, y, angle, sx, sy, offx, offy)
       end
     else
       love.graphics.rectangle('fill', x, y, s.w, s.h)

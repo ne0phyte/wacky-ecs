@@ -1,13 +1,34 @@
 local ECS = require('wacky-ecs.wacky-ecs')
 
+local Vector2D = ECS.Data.Vector2D
+
+-- ECS.Component.new('position',
+--   function(x, y)
+--     return {
+--       x = x,
+--       y = y
+--     }
+--   end)
+
 ECS.Component.new('position',
-  function(x, y, angle)
-    return {
-      x = x,
-      y = y,
-      angle = angle or 0
-    }
+  function(x, y)
+    return Vector2D(x or 0, y or 0)
   end)
+
+ECS.Component.new('angle',
+  function(angle)
+    return angle or 0
+  end)
+
+ECS.Component.new('velocity',
+  function(x, y)
+    return Vector2D(x or 0, y or 0)
+  end)
+
+-- ECS.Component.new('velocity',
+--   function(x, y)
+--     return { x = x, y = y }
+--   end)
 
 ECS.Component.new('parent', function(parent)
   return parent
@@ -20,11 +41,16 @@ ECS.Component.new('movement_speed',
 
 ECS.Component.new('size',
   function(width, height)
-    return {
-      w = width,
-      h = height
-    }
+    return Vector2D(width or 0, height or 0)
   end)
+
+-- ECS.Component.new('size',
+--   function(width, height)
+--     return {
+--       w = width,
+--       h = height
+--     }
+--   end)
 
 ECS.Component.new('health', function(health)
   return health
