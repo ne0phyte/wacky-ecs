@@ -1,15 +1,15 @@
 local ECS = require('wacky-ecs.wacky-ecs')
 
 local camera = ECS.System.new('camera', 'camera')
-local Vector2D = ECS.Data.Vector2D
+local Vector = ECS.Data.Vector
 
 function camera:wacky_init(world)
-  self.size = Vector2D(1, 1)
-  self.screen = Vector2D(1, 1)
-  self.scale = Vector2D(1, 1)
-  self.pos = Vector2D(0, 0)
+  self.size = Vector.new(1, 1)
+  self.screen = Vector.new(1, 1)
+  self.scale = Vector.new(1, 1)
+  self.pos = Vector.new(0, 0)
   self.preserveRatio = false
-  self.zoom = Vector2D(1, 1)
+  self.zoom = Vector.new(1, 1)
   self:update_camera()
 end
 

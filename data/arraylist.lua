@@ -22,10 +22,17 @@ function ArrayList:add(o)
 end
 
 function ArrayList:addAll(t)
-  for k,o in pairs(t) do
-    self:add(o)
+  if getmetatable(t) == ArrayList then
+    for i=1, t:getHead() do
+      if t[i] ~= false then
+        self:add(t[i])
+      end
+    end
+  else
+    for k,o in pairs(t) do
+      self:add(o)
+    end
   end
-  return self
 end
 
 function ArrayList:get(i)
@@ -80,55 +87,83 @@ function ArrayList:getHead()
   return self.__head
 end
 
-function ArrayList:compact(preserveOrder)
-  if preserveOrder then
-    self:__compactPreserveOrder()
-  else
-    self:__compactFast()
+function ArrayList:compact(preserveOrder, resize)
+  if self.__head > 1 then
+    if preserveOrder then
+      self:__compactPreserveOrder(resize)
+    else
+      self:__compactFast(resize)
+    end
   end
+  if resize then self:resize(self.__head) end
+  return self.__head
 end
 
 function ArrayList:__compactPreserveOrder()
-  local head, length = 1, self.__size
+  local head, tail = 1, self.__head
 
   -- from head to tail
-  while head <= length do
+  while head <= tail do
     if self[head] == false then
       local skip = 1
       -- how many empty indices
-      while self[head+skip] == false and head+skip <= length do
+      while self[head+skip] == false and head+skip <= tail do
         skip = skip + 1
       end
       -- move rest of array
-      for i=head+skip,length do
+      for i=head+skip,tail do
         self[i-skip] = self[i]
+--         self[i] = false -- TODO this vs loop till self.__head
       end
       -- move head forward and tail backwards
-      length = length - skip
+      tail = tail - skip
     else
       head = head + 1
     end
   end
-  self:resize(length)
+  self.__head = tail
 end
 
 function ArrayList:__compactFast()
-  local head, length = 1, self.__size
+  local head, tail = 1, self.__head
 
   -- from head to tail
-  for h=1, length do
+  for h=1, tail do
     if self[h] == false then
       -- from tail to non-empty index
-      for t=length,h, -1 do
-        length = length - 1
+      for t=tail,h, -1 do
+        tail = tail - 1
         if self[t] ~= false then
           self[h] = self[t]
+--           self[t] = false -- TODO this vs loop till self.__head
           break
         end
       end
     end
   end
-  self:resize(length)
+  self.__head = tail
 end
+
+-- function ArrayList:__compactFast(resize)
+--   local head, tail = 1, self.__size
+
+--   -- from head to tail
+--   while head < tail do
+--     print(head, tail)
+--     if self[head] == false then
+--       repeat
+--         if self[tail] ~= false then
+--           self[head] = self[tail]
+--           tail = tail - 1
+--           break
+--         end
+--         tail = tail - 1
+--       until tail == head
+--     end
+--     head = head + 1
+--   end
+--   if self[tail] == false then tail = tail -1 end
+--   self.__head = tail
+-- end
 
 return ArrayList

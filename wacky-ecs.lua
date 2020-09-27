@@ -1,7 +1,8 @@
 local PATH = (...):match('(.-)[^%.]+$')
-local HashList = require(PATH .. '.util.hashlist')
-local ArrayList = require(PATH .. '.util.arraylist')
-local Vector2D = require(PATH .. '.util.brinevector')
+local HashList = require(PATH .. '.data.hashlist')
+local ArrayList = require(PATH .. '.data.arraylist')
+local Vector = require(PATH .. '.data.vector')
+local VectorLight = require(PATH .. '.util.vector-light')
 
 local Entity, Component, System, World = {}, {}, {}, {}
 
@@ -200,10 +201,10 @@ function World:addSystem(name)
 
   local idx = self.systems:add({
     system = system,
+    name = name,
     cache = HashList.new(self:getEntities(system.__filter))
   })
   self.systemNames[name] = idx
-  print('add system', name, idx)
   if type(system.wacky_init) == 'function' then
     system:wacky_init(self)
   end
@@ -267,16 +268,12 @@ function World:getSystem(name)
 end
 
 function World:call(event, ...)
-  prof.push(event)
   for _, worldSystem in ipairs(self.systems) do
     local system = worldSystem.system
     if type(system[event]) == 'function' then
-      prof.push(_)
       system[event](system, worldSystem.cache, ...)
-      prof.pop(_)
     end
   end
-  prof.pop(event)
 end
 
 return {
@@ -287,6 +284,9 @@ return {
   Data = {
     HashList = HashList,
     ArrayList = ArrayList,
-    Vector2D = Vector2D
+    Vector = Vector
+  },
+  Util = {
+    VectorLight = VectorLight
   }
 }

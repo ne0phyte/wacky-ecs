@@ -1,6 +1,6 @@
 local ECS = require('wacky-ecs.wacky-ecs')
 
-local Vector2D = ECS.Data.Vector2D
+local Vector = ECS.Data.Vector
 
 ECS.Component.new('drawable',
 function(texture, z, quad, color, angle, floor)
@@ -11,7 +11,7 @@ function(texture, z, quad, color, angle, floor)
     z = z or 0,
     angle = angle or 0,
     floor = floor or true,
-    scale = Vector2D(1,1)
+    scale = Vector.new(1,1)
   }
 end)
 
@@ -36,6 +36,14 @@ function render:getRenderCount()
   return self.drawListLength
 end
 
+function render:addDrawable(drawable)
+  self.drawList:add(drawable)
+end
+
+function render:addDrawables(drawables)
+  self.drawList:addAll(drawables)
+end
+
 function render:draw(entities)
   local camera = self:getWorld():getSystem('camera')
   local resolveEntityPosition = self.resolveEntityPosition
@@ -43,14 +51,23 @@ function render:draw(entities)
   -- sort by z and __id
   prof.push('sort_drawables')
   local drawList = self.drawList
-  drawList:resetHead()
+  -- remove added drawables that are not visible before sorting
+  for i=1,drawList:getHead() do
+    local e = drawList[i]
+    local x,y = resolveEntityPosition(e)
+    if self.enableCulling and not camera:isVisible(x,y,e.size.x,e.size.y) then
+      drawList:remove(i)
+    end
+  end
+
   for _,e in ipairs(entities) do
     local x,y = resolveEntityPosition(e)
     if not self.enableCulling or camera:isVisible(x,y,e.size.x,e.size.y) then
       drawList:add(e)
     end
   end
-  drawList:resize() -- avoid?
+  drawList:compact(false, true) --avoid this?
+
   -- how to sort only range of list with table.sort
   table.sort(drawList, function(e1, e2)
     if e1.drawable.z == e2.drawable.z then return e1.__id < e2.__id
@@ -92,9 +109,10 @@ function render:draw(entities)
         love.graphics.draw(d.texture, x, y, angle, sx, sy, offx, offy)
       end
     else
-      love.graphics.rectangle('fill', x, y, s.w, s.h)
+      love.graphics.rectangle('fill', x, y, s.x, s.y)
     end
   end
+  drawList:resetHead()
   prof.pop('render')
 end
 
