@@ -144,26 +144,4 @@ function ArrayList:__compactFast()
   self.__head = tail
 end
 
--- function ArrayList:__compactFast(resize)
---   local head, tail = 1, self.__size
-
---   -- from head to tail
---   while head < tail do
---     print(head, tail)
---     if self[head] == false then
---       repeat
---         if self[tail] ~= false then
---           self[head] = self[tail]
---           tail = tail - 1
---           break
---         end
---         tail = tail - 1
---       until tail == head
---     end
---     head = head + 1
---   end
---   if self[tail] == false then tail = tail -1 end
---   self.__head = tail
--- end
-
 return ArrayList
