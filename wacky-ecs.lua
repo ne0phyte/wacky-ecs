@@ -3,6 +3,7 @@ local HashList = require(PATH .. '.data.hashlist')
 local ArrayList = require(PATH .. '.data.arraylist')
 local Vector = require(PATH .. '.data.vector')
 local VectorLight = require(PATH .. '.util.vector-light')
+local Pool = require(PATH .. '.util.pool')
 
 local Entity, Component, System, World = {}, {}, {}, {}
 
@@ -287,6 +288,7 @@ return {
     Vector = Vector
   },
   Util = {
-    VectorLight = VectorLight
+    VectorLight = VectorLight,
+    Pool = Pool
   }
 }
