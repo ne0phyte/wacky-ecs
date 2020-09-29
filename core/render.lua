@@ -18,7 +18,7 @@ end)
 local render = ECS.System.new('render', {'position', 'size', 'drawable'})
 
 function render:wacky_init()
-  self.drawList = ECS.Data.ArrayList.new(10000)
+  self.drawList = ECS.Data.ArrayList.new(1000)
   self.drawListLength = 0
   self.renderCount = 0
   self.enableCulling = true
@@ -42,6 +42,11 @@ end
 
 function render:addDrawables(drawables)
   self.drawList:addAll(drawables)
+end
+
+local function compareDrawables(e1, e2)
+  if e1.drawable.z == e2.drawable.z then return e1.__id < e2.__id
+  else return e1.drawable.z < e2.drawable.z end
 end
 
 function render:draw(entities)
@@ -69,10 +74,7 @@ function render:draw(entities)
   drawList:compact(false, true) --avoid this?
 
   -- how to sort only range of list with table.sort
-  table.sort(drawList, function(e1, e2)
-    if e1.drawable.z == e2.drawable.z then return e1.__id < e2.__id
-    else return e1.drawable.z < e2.drawable.z end
-  end)
+  table.sort(drawList, compareDrawables)
   self.drawListLength = drawList:getHead()
   prof.pop('sort_drawables')
 
