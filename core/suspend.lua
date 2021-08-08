@@ -69,7 +69,7 @@ local suspend = ECS.System.new('suspend', {'suspendable', 'position', 'size'})
 function suspend:wacky_init()
   self.gridSize = 64
   self.chunkSize = 16
-  self.preload = 1
+  self.preload = 2
   self.chunks = Chunklist.new(self.gridSize, self.chunkSize)
 
   self.suspendDt = 0
@@ -96,9 +96,6 @@ function suspend:update(entities, dt)
   local sx = (self.preload+math.floor(cw / self.gridSize)) * self.gridSize
   local sy = (self.preload+math.floor(ch / self.gridSize)) * self.gridSize
 
---   local removals = 0
---   local additions = 0
-
   prof.push('awake')
   for gridx = ox, ox+sx, self.gridSize do
     for gridy = oy, oy+sy, self.gridSize do
@@ -107,7 +104,6 @@ function suspend:update(entities, dt)
         local head = list:getHead()
         for i=1,head do
           world:addEntity(list[i])
---           additions = additions + 1
         end
         self.chunks:clearChunk(gridx, gridy)
       end
@@ -130,13 +126,11 @@ function suspend:update(entities, dt)
         if (x < ox or x > sx) or (y < oy or y > sy) then
           world:removeEntity(e)
           self.chunks:add(e, x, y)
---           removals = removals + 1
         end
       end
     end
     prof.pop('suspend')
   end
---   print(additions, removals)
 end
 
 -- function suspend:suspendAll(entities)
