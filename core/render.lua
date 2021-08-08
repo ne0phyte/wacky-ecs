@@ -5,13 +5,12 @@ local Vector = ECS.Data.Vector
 ECS.Component.new('drawable',
 function(texture, z, quad, color, angle, floor)
   return {
-    texture = texture,
+    texture = texture or nil,
     quad = quad or nil,
     color = color or {1,1,1},
     z = z or 0,
     angle = angle or 0,
     floor = floor or true,
-    -- scale = Vector.new(1,1) -- TODO remove
   }
 end)
 
@@ -110,9 +109,13 @@ function render:draw(entities)
         love.graphics.draw(d.texture, x, y, angle, sx, sy, offx, offy)
       end
     else
-      -- TODO ??? render with objects rotation
-      love.graphics.rectangle('fill', x - s.x/2, y - s.y/2, s.x, s.y)
+        love.graphics.push();
+        love.graphics.translate(x, y)
+        love.graphics.rotate(angle)
+        love.graphics.rectangle('fill', -s.x/2, -s.y/2, s.x, s.y)
+        love.graphics.pop();
     end
+
     -- love.graphics.setColor(0,1,0)
     -- love.graphics.circle('fill', x, y, 1)
   end
