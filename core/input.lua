@@ -1,6 +1,6 @@
 local ECS = require('wacky-ecs.wacky-ecs')
 
-local input = ECS.System.new('input', nil)
+local input = ECS.System.new('input', nil, nil, true)
 
 input.mouse = { x = 0, y = 0 }
 input.buttons = { false, false, false }
@@ -31,8 +31,7 @@ function input:getGameMouse()
   return camera:screenToGame(self.mouse.x, self.mouse.y)
 end
 
--- TODO multiple input systems (multiple worlds/scenes)?
-function love.wheelmoved(x, y)
+function love.wheelmoved(x, y) 
   input.wheel.x = input.wheel.x + x
   input.wheel.y = input.wheel.y + y
 end
