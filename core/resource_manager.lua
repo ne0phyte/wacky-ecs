@@ -14,7 +14,12 @@ end
 
 function resourceManager:getTiles(file, width, height)
   if not self.tilesets[file] then
-    local tmp = { quads = {}, texture = self:getTexture(file) }
+    local tmp = {
+      quads = {},
+      texture = self:getTexture(file),
+      width = width,
+      height = height
+    }
     local tw, th = tmp.texture:getDimensions()
     for y=0,th-height,height do
       for x=0,tw-width,width do
