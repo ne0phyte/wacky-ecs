@@ -5,6 +5,10 @@ local Vector = require(PATH .. '.data.vector')
 local VectorLight = require(PATH .. '.util.vector-light')
 local Pool = require(PATH .. '.util.pool')
 
+-- jprof 
+PROF_CAPTURE = false
+prof = require(PATH .. '.jprof')
+
 local Entity, Component, System, World = {}, {}, {}, {}
 
 -- multiple filters per system
@@ -269,12 +273,16 @@ function World:getSystem(name)
 end
 
 function World:call(event, ...)
+  prof.push(event)
   for _, worldSystem in ipairs(self.systems) do
     local system = worldSystem.system
     if type(system[event]) == 'function' then
+      prof.push(worldSystem.name)
       system[event](system, worldSystem.cache, ...)
+      prof.pop(worldSystem.name)
     end
   end
+  prof.pop(event)
 end
 
 return {
