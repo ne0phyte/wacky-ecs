@@ -71,8 +71,13 @@ end
 function camera:isVisible(x, y, w, h)
   local x = x + self.pos.x
   local y = y + self.pos.y
-  return x+w > 0 and x-w < self.size.x and
-         y+h > 0 and y-h < self.size.y
+  -- proper way of handling rotated entities? 
+  -- currently just taking longer side times two, just to be sure 
+  local size = h
+  if w > h then size = w end
+  size = size * 2
+  return x+size > 0 and x-size < self.size.x and
+         y+size > 0 and y-size < self.size.y
 end
 
 -- function camera:setZoom(x, y)
