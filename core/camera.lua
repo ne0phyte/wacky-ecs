@@ -71,8 +71,8 @@ end
 function camera:isVisible(x, y, w, h)
   local x = x + self.pos.x
   local y = y + self.pos.y
-  return x+w > 0 and x < self.size.x and
-         y+h > 0 and y < self.size.y
+  return x+w > 0 and x-w < self.size.x and
+         y+h > 0 and y-h < self.size.y
 end
 
 -- function camera:setZoom(x, y)
