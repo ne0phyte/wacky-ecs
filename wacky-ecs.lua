@@ -4,7 +4,7 @@ local ArrayList = require(PATH .. '.data.arraylist')
 local Vector = require(PATH .. '.data.vector')
 local VectorLight = require(PATH .. '.util.vector-light')
 local Pool = require(PATH .. '.util.pool')
-local Debug = require(PATH .. '.util.pool')
+local Debug = require(PATH .. '.util.Debug')
 
 -- jprof 
 PROF_CAPTURE = false
