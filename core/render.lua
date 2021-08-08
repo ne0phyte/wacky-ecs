@@ -11,7 +11,7 @@ function(texture, z, quad, color, angle, floor)
     z = z or 0,
     angle = angle or 0,
     floor = floor or true,
-    scale = Vector.new(1,1)
+    -- scale = Vector.new(1,1) -- TODO remove
   }
 end)
 
@@ -98,21 +98,23 @@ function render:draw(entities)
       love.graphics.setColor(1,1,1)
     end
     if d.texture then
-      x,y = x+offx, y+offy
       if d.quad then
         local qx, qy, qw, qh = d.quad:getViewport( )
         local sx, sy = s.x / qw, s.y / qh
-        sx, sy = sx * d.scale.x, sy * d.scale.y
+        offx, offy = offx / sx, offy / sy
         love.graphics.draw(d.texture, d.quad, x, y, angle, sx, sy, offx, offy)
       else
         local tw, th = d.texture:getDimensions( )
         local sx, sy = s.x / tw, s.y / th
-        sx, sy = sx * d.scale.x, sy * d.scale.y
+        offx, offy = offx / sx, offy / sy
         love.graphics.draw(d.texture, x, y, angle, sx, sy, offx, offy)
       end
     else
-      love.graphics.rectangle('fill', x, y, s.x, s.y)
+      -- TODO ??? render with objects rotation
+      love.graphics.rectangle('fill', x - s.x/2, y - s.y/2, s.x, s.y)
     end
+    -- love.graphics.setColor(0,1,0)
+    -- love.graphics.circle('fill', x, y, 1)
   end
   drawList:resetHead()
   prof.pop('render')
