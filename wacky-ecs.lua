@@ -99,8 +99,8 @@ end
 
 -- SYSTEM
 System.__index = System
-function System.new(name, filter, events)
-  local s = { __filter = filter }
+function System.new(name, filter, events, singleInstance)
+  local s = { __filter = filter, __singleInstance = singleInstance or false }
   System[name] = setmetatable(s, System)
   if events then
     for event, func in pairs(events) do
@@ -120,7 +120,11 @@ end
 
 function System.__createInstance(name)
   if not System[name] then return nil end
-  return setmetatable(deepCopy(System[name]), System)
+  if System[name].__singleInstance then
+    return System[name]
+  else 
+    return setmetatable(deepCopy(System[name]), System)
+  end
 end
 
 -- WORLD
