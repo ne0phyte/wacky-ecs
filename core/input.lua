@@ -30,3 +30,9 @@ function input:getGameMouse()
   local camera = self:getWorld():getSystem('camera')
   return camera:screenToGame(self.mouse.x, self.mouse.y)
 end
+
+-- TODO multiple input systems (multiple worlds/scenes)?
+function love.wheelmoved(x, y)
+  input.wheel.x = input.wheel.x + x
+  input.wheel.y = input.wheel.y + y
+end
